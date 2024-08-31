@@ -7,53 +7,37 @@ import { ErrorMessage } from "formik";
 import axios from "axios";
 import LoadMoreBtn from "../LoadMoreBtn/LoadMoreBtn";
 import ImageModal from "../ImageModal/ImageModal";
+import { ApiUnsplash, Image } from "./App.types";
 
 const API_KEY = "WgBZs32C0FE638ylFiqLWFLny3RBOmApS89jOLltui8";
 const BASE_URL = "https://api.unsplash.com";
 
-// const arrey = [
-//   {
-//     id: "boMKfQkphro",
-//     urls: {
-//       small:
-//         "https://images.unsplash.com/photo-1721332149267-ef9b10eaacd9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w2MzUxOTl8MXwxfGFsbHwxfHx8fHx8Mnx8MTcyMTc2OTAxOXw&ixlib=rb-4.0.3&q=80&w=400",
-//     },
-//     alt_description: "A close up of a motherboard and a pen on a table",
-//   },
-//   {
-//     id: "GLJeszYOSmQ",
-//     urls: {
-//       small:
-//         "https://images.unsplash.com/photo-1721297015609-1374b1378d31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w2MzUxOTl8MHwxfGFsbHwyfHx8fHx8Mnx8MTcyMTc2OTAxOXw&ixlib=rb-4.0.3&q=80&w=400",
-//     },
-//     alt_description: "An aerial view of a car driving on a dirt road",
-//   },
-// ];
-
 function App() {
-  const [page, setPage] = useState(1);
-  const [photos, setPhotos] = useState([]);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [isEmpty, setIsEmpty] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [modalImage, setModalImage] = useState(null);
+  const [page, setPage] = useState<number>(1);
+  const [photos, setPhotos] = useState<Image[]>([]);
+  const [query, setQuery] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isEmpty, setIsEmpty] = useState<boolean>(false);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [modalImage, setModalImage] = useState<Image | null>(null);
   useEffect(() => {
     if (!query) {
       return;
     }
     const fetchImages = async () => {
       setLoading(true);
+      setError(null);
       try {
-        const response = await axios.get(
+        const response = await axios.get<ApiUnsplash>(
           `${BASE_URL}/search/photos?client_id=${API_KEY}`,
           {
             params: {
               query,
               page,
               per_page: 16,
+              client_id: API_KEY,
             },
           }
         );
@@ -64,7 +48,7 @@ function App() {
           setIsVisible(response.data.results.length === 16);
         }
       } catch (error) {
-        setError(error);
+        setError("Please try again");
       } finally {
         setLoading(false);
       }
@@ -72,7 +56,7 @@ function App() {
     fetchImages();
   }, [query, page]);
 
-  const onHandleSubmit = (value) => {
+  const onHandleSubmit = (value: string) => {
     if (value === query) return;
     setQuery(value);
     setPhotos([]);
@@ -82,7 +66,7 @@ function App() {
     setError(null);
   };
 
-  const openModal = (photo) => {
+  const openModal = (photo: Image) => {
     setModalImage(photo);
     setShowModal(true);
   };
@@ -100,13 +84,7 @@ function App() {
       )}
       {!photos.length && !isEmpty && <p> Let`s begit saerch</p>}
       {loading && <Loader />}
-      {error && (
-        <ErrorMessage
-          name="fetchError"
-          component="div"
-          message="Something went wrong"
-        />
-      )}
+      {error && <div className="error-message">{error}</div>}
       {isEmpty && <p>Sorry. There are not images ...</p>}
       {isVisible && !loading && (
         <LoadMoreBtn onClick={() => setPage((prevPage) => prevPage + 1)} />
